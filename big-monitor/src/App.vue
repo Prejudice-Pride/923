@@ -1,11 +1,20 @@
-<script setup lang="ts"></script>
+<script setup>
+// 1. 导入组件（根据实际路径调整）
+import MapContainer from './views/Mapcontainer.vue' 
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <!-- 2. 使用组件 -->
+  <div id="app">
+    <MapContainer />
+  </div>
 </template>
 
-<style scoped></style>
+<style>
+/* 3. 可选的全局样式 */
+#app {
+  font-family: Arial, sans-serif;
+  width: 100vw;
+  height: 100vh;
+}
+</style>
