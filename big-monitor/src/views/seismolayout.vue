@@ -1,25 +1,18 @@
-<script>
-import Map from "./components/Map.vue";
+<script setup lang="ts">
+import EarthquakeMap from "./components/EarthquakeMap.vue"
+import EarthQuakeTable from "./components/EarthQuakeTable.vue"
+import { ref } from "vue"
 
-export default {
-  name: "SeismoLayout",
-  components: { Map },
-  data() {
-    return {
-      navItems: [
-        { label: "地震活动监控页面", active: true },
-        { label: "地球物理观测监控", active: false },
-        { label: "地震学技术方法可视化", active: false },
-        { label: "数据产品服务", active: false },
-      ],
-    };
-  },
-  methods: {
-    activate(idx) {
-      this.navItems.forEach((item, i) => (item.active = i === idx));
-    },
-  },
-};
+const navItems = ref([
+  { label: "地震活动监控页面", active: true },
+  { label: "地球物理观测监控", active: false },
+  { label: "地震学技术方法可视化", active: false },
+  { label: "数据产品服务", active: false },
+])
+
+function activate(idx: number) {
+  navItems.value.forEach((item, i) => (item.active = i === idx))
+}
 </script>
 
 <template>
@@ -49,18 +42,19 @@ export default {
     <main class="main-content">
       <div class="column left">
         <div class="card">
-          <div class="card-title">左侧面板</div>
+          <div class="card-title">地震目录</div>
           <div class="card-body">
-            这里可以放置监控选项、统计概览等。
+            <!-- 注意用 kebab-case -->
+            <earthquake-table />
           </div>
         </div>
       </div>
 
       <div class="column center">
         <div class="card">
-          <div class="card-title">核心监控区</div>
+          <div class="card-title">地震分布图</div>
           <div class="card-body">
-            <Map />
+            <earthquake-map />
           </div>
         </div>
       </div>
@@ -85,6 +79,8 @@ export default {
   height: 100vh;
   background: #001428;
   color: #fff;
+  margin: 0; /* 去掉默认白边 */
+  padding: 0;
 }
 
 /* banner */
@@ -170,6 +166,12 @@ export default {
   color: #00eaff;
   border-bottom: 1px solid #00c6ff;
   background: rgba(0, 40, 80, 0.8);
+
+  /* 居中样式 */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-body {
@@ -179,7 +181,7 @@ export default {
 }
 
 .card-body > * {
-  flex: 1; /* Map 或内容撑满 */
+  flex: 1; /* Map 或 Table 撑满 */
 }
 
 /* Map 容器 */
