@@ -1,20 +1,24 @@
-<script setup>
-// 1. 导入组件（根据实际路径调整）
-import MapContainer from './views/Mapcontainer.vue' 
+<script lang="ts" setup>
+import seismolayout from './views/seismolayout.vue'
+import test from './views/test.vue'
 </script>
 
 <template>
-  <!-- 2. 使用组件 -->
-  <div id="app">
-    <MapContainer />
-  </div>
+  <seismolayout />
+  <!-- <test /> -->
 </template>
 
 <style>
-/* 3. 可选的全局样式 */
+/* 全局重置边距和内边距 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
 #app {
-  font-family: Arial, sans-serif;
-  width: 100vw;
-  height: 100vh;
+  height: 100%;
 }
 </style>
