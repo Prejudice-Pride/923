@@ -14,3 +14,19 @@ def list_earthquakes():
         return jsonify({"data": data, "total": len(data)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@dzml_new_bp.route("/page", methods=["GET"])
+def list_earthquakes_paginated():
+    try:
+        page = int(request.args.get("page", 1))
+        size = int(request.args.get("size", 10))
+
+        query = DzmlNew.query
+        total = query.count()
+        items = query.offset((page - 1) * size).limit(size).all()
+
+        data = dzml_new_schema.dump(items)
+        return jsonify({"data": data, "total": total, "page": page, "size": size})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

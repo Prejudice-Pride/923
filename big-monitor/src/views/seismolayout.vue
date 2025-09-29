@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import EarthquakeMap from "./components/EarthquakeMap.vue"
-import EarthQuakeTable from "./components/EarthQuakeTable.vue"
+import EarthquakeTable from "./components/EarthquakeTable.vue"
 import { ref } from "vue"
 
 const navItems = ref([
@@ -181,8 +181,10 @@ function activate(idx: number) {
 }
 
 .card-body > * {
-  flex: 1; /* Map 或 Table 撑满 */
+  flex: 1;
+  min-height: 0; /* <-- 必加：允许子容器内部滚动 */
 }
+
 
 /* Map 容器 */
 .map-wrapper {
