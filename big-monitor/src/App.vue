@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import seismolayout from './views/seismolayout.vue'
+import monitor1 from './views/Monitor1.vue'
 import test from './views/test.vue'
 </script>
 
 <template>
-  <seismolayout />
-  <!-- <test /> -->
+  <router-view />
 </template>
 
 <style>

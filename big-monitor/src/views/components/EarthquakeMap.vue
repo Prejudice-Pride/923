@@ -7,52 +7,33 @@ import { onMounted, onUnmounted } from "vue";
 import AMapLoader from "@amap/amap-jsapi-loader";
 import { useProvinceStore } from "../../stores/usersProvinceStore";
 
-let map: any = null; // 避免 TS 报错
+let map: any = null;
 const provinceStore = useProvinceStore();
 
 onMounted(() => {
-  // 高德安全密钥
-  (window as any)._AMapSecurityConfig = {
-    securityJsCode: "d38dfc2916c1ab189a71e3da20a1a857",
-  };
+  (window as any)._AMapSecurityConfig = { securityJsCode: "d38dfc2916c1ab189a71e3da20a1a857" };
 
   AMapLoader.load({
     key: "2a69aa7100d68626b83197ec959bbae7",
     version: "2.0",
-    plugins: ["AMap.DistrictSearch", "AMap.DistrictLayer", "AMap.MarkerClusterer"],
+    plugins: ["AMap.DistrictSearch", "AMap.MarkerClusterer"],
   })
     .then((AMap) => {
-      // 初始化地图
       map = new AMap.Map("map-container", {
         viewMode: "3D",
         center: provinceStore.center,
         zoom: 6,
-        features: ["bg", "road", "point"], // 不显示铁路层
+        features: ["bg", "road", "point"],
       });
 
-      // 使用 DistrictSearch 获取省边界
-      const district = new AMap.DistrictSearch({
-        extensions: "all",
-        subdistrict: 0,
-      });
-
-      const searchKey = provinceStore.adcode || provinceStore.name;
-
-      district.search(
-        searchKey,
-        (status: string, result: { districtList?: any[] }) => {
-          if (status === "complete" && result.districtList?.length) {
-            const info = result.districtList[0];
-            const boundaries = info.boundaries;
-
-            if (!boundaries || boundaries.length === 0) {
-              console.warn("未查询到边界数据，无法设置掩膜与 fitView。");
-              return;
-            }
-
+      const district = new AMap.DistrictSearch({ extensions: "all", subdistrict: 1 });
+      district.search(provinceStore.adcode || provinceStore.name, (status: string, result: any) => {
+        if (status === "complete" && result?.districtList?.length) {
+          const info = result.districtList[0];
+          const boundaries = info.boundaries;
+          if (boundaries && boundaries.length) {
             const mask = boundaries.map((b: any) => [b]);
 
-            // 绘制省份高亮 polygon（深蓝色）
             const provincePolygon = new AMap.Polygon({
               path: mask[0],
               strokeColor: "#00eaff",
@@ -62,30 +43,19 @@ onMounted(() => {
               zIndex: 1000,
             });
             map.add(provincePolygon);
-
-            // 设置掩膜
             map.setMask(mask);
             map.setMapStyle("amap://styles/dark");
 
-            // 自动调整视野并以省会为中心
             map.setFitView([provincePolygon], false, [60, 60, 60, 60]);
             setTimeout(() => {
               const curZoom = map.getZoom();
-              const desiredZoom = Math.min(curZoom + 1, 13);
-              map.setZoom(desiredZoom);
-              map.setCenter(provinceStore.center);
+              map.setZoom(Math.min(curZoom + 1, 13));
             }, 200);
-          } else {
-            console.error("DistrictSearch 查询失败：", status, result);
           }
-        });
+        }
+      });
 
-      // 获取省内地震数据
-      fetch(
-        `http://127.0.0.1:5000/dzml_new/by_province?name=${encodeURIComponent(
-          provinceStore.name
-        )}`
-      )
+      fetch(`http://127.0.0.1:5000/dzml_new/by_province?name=${encodeURIComponent(provinceStore.name)}`)
         .then((res) => res.json())
         .then((resData) => {
           const markers: any[] = [];
@@ -106,8 +76,7 @@ onMounted(() => {
                   <strong>${eq.DiMing || "未知"}</strong><br/>
                   震级: M${eq.mc ?? "N/A"}<br/>
                   时间: ${eq.RiQi ?? "未知"}
-                </div>
-              `,
+                </div>`,
               offset: new AMap.Pixel(0, -20),
             });
 
@@ -125,18 +94,20 @@ onMounted(() => {
     .catch((e) => console.error("地图加载失败", e));
 });
 
-
 onUnmounted(() => {
   map?.destroy();
 });
 </script>
 
 <style scoped>
+/* 让地图容器充满卡片体 */
 #map-container {
   width: 100%;
-  height: 600px;
+  height: 100%;
+  min-height: 280px; /* 当卡片很小的时候给个下限 */
 }
 
+/* 地震点圆圈（如你原样） */
 .eq-marker {
   background-color: rgba(255, 0, 0, 0.75);
   color: #fff;
