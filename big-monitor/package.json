@@ -16,6 +16,7 @@
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
     "@kjgl77/datav-vue3": "^1.7.4",
+    "axios": "^1.12.2",
     "cesium": "^1.134.0",
     "pinia": "^3.0.3",
     "vite-plugin-cesium": "^1.2.23",
