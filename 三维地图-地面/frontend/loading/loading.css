@@ -1,0 +1,288 @@
+/* 加载页面样式 - 炫酷科技感设计 */
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  z-index: 99999;
+  opacity: 1;
+  transition: transform 0.8s ease-out;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.loading-overlay.fade-out {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+/* 整体布局：上下分区设计 */
+.loading-overlay {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;  /* 改为顶对齐，更好控制间距 */
+  align-items: center;
+  padding: 20px;  /* 减少内边距，留更多空间给内容 */
+  box-sizing: border-box;
+}
+
+/* 3D动画容器 - 占据上半部分 */
+.loading-animation-container {
+  position: relative;
+  width: 100%;
+  height: 55vh;  /* 增加到55%，让3D动画更突出 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100000;
+  margin-bottom: 25px;
+}
+
+#loading-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100001;
+  pointer-events: none;
+}
+
+/* 加载信息面板 - 占据下半部分 */
+.loading-info {
+  position: relative;
+  width: 100%;
+  max-width: 420px;  /* 缩小最大宽度，更精致 */
+  text-align: center;
+  color: white;
+  font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  z-index: 100002;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 25px 20px;  /* 减少内边距，更紧凑 */
+}
+
+/* 应用标题 */
+.loading-title {
+  font-size: 24px;  /* 缩小字体，与3D动画更协调 */
+  font-weight: 200;  /* 更细的字重，更精致 */
+  margin-bottom: 25px;
+  color: #00aaff;
+  text-shadow: 0 0 15px rgba(0, 170, 255, 0.4);  /* 减弱发光效果 */
+  letter-spacing: 2px;  /* 适度字母间距 */
+  animation: titleGlow 3s ease-in-out infinite alternate;
+  width: 100%;
+  opacity: 0.9;  /* 稍微降低透明度，更优雅 */
+}
+
+@keyframes titleGlow {
+  from {
+    text-shadow: 0 0 15px rgba(0, 170, 255, 0.4);
+  }
+  to {
+    text-shadow: 0 0 20px rgba(0, 170, 255, 0.6), 0 0 25px rgba(0, 170, 255, 0.2);
+  }
+}
+
+/* 加载状态文字 */
+.loading-status {
+  font-size: 14px;  /* 缩小字体，更精致 */
+  font-weight: 300;  /* 更细的字重 */
+  color: #aaaaaa;  /* 降低颜色对比 */
+  margin-bottom: 30px;
+  min-height: 18px;
+  transition: all 0.3s ease;
+  opacity: 0.7;  /* 降低透明度，突出3D动画 */
+  width: 100%;
+  letter-spacing: 1px;  /* 增加字母间距 */
+}
+
+.loading-status.updating {
+  opacity: 1;
+  color: #00ffff;
+}
+
+/* 进度条容器 */
+.progress-container {
+  width: 320px;  /* 缩小进度条宽度 */
+  height: 5px;   /* 稍微降低高度，更精致 */
+  background: rgba(255, 255, 255, 0.08);  /* 更透明的背景 */
+  border-radius: 2.5px;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 170, 255, 0.15);  /* 更细的边框 */
+  margin: 0 auto;
+}
+
+/* 进度条 */
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00aaff 0%, #00ffff 50%, #ffffff 100%);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0, 170, 255, 0.6);
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  animation: progressShine 2s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 进度百分比 */
+.progress-text {
+  font-size: 12px;  /* 缩小字体，更精致 */
+  color: #00aaff;
+  margin-top: 15px;
+  font-weight: 300;  /* 更细的字重 */
+  letter-spacing: 1px;
+  width: 100%;
+  opacity: 0.8;  /* 降低透明度 */
+}
+
+/* 加载点动画 */
+.loading-dots {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: loadingDots 1.5s steps(4, end) infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .loading-animation-container {
+    height: 45vh;  /* 平板设备上稍微减小动画区域 */
+  }
+
+  .loading-title {
+    font-size: 26px;  /* 调整标题大小 */
+    letter-spacing: 2px;
+  }
+
+  .loading-status {
+    font-size: 16px;
+  }
+
+  .progress-container {
+    width: 320px;
+  }
+
+  .progress-text {
+    font-size: 14px;
+  }
+
+  .loading-info {
+    padding: 30px 20px;  /* 减少内边距 */
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-animation-container {
+    height: 40vh;  /* 手机设备上进一步减小动画区域 */
+    margin-bottom: 20px;
+  }
+
+  .loading-title {
+    font-size: 22px;  /* 手机上的标题大小 */
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+  }
+
+  .loading-status {
+    font-size: 15px;
+    margin-bottom: 25px;
+  }
+
+  .progress-container {
+    width: 280px;
+  }
+
+  .progress-text {
+    font-size: 13px;
+    margin-top: 15px;
+  }
+
+  .loading-info {
+    padding: 20px 15px;  /* 手机上更紧凑的布局 */
+  }
+}
+
+/* 背景粒子效果增强 */
+.loading-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #00aaff, transparent),
+    radial-gradient(2px 2px at 40px 70px, #00ffff, transparent),
+    radial-gradient(1px 1px at 90px 40px, #ffffff, transparent),
+    radial-gradient(1px 1px at 130px 80px, #00aaff, transparent);
+  background-size: 200px 200px;
+  animation: particleMove 20s linear infinite;
+  opacity: 0.1;
+  z-index: -1;
+}
+
+@keyframes particleMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-200px, -200px);
+  }
+}
+
+/* 性能优化 */
+.loading-overlay,
+.loading-animation-container,
+.progress-bar {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试台站图层</title>
+</head>
+<body>
+    <h1>台站图层测试</h1>
+    <div id="log"></div>
+    <script>
+        // 打开主页面并在控制台运行测试
+        window.open('sgs-basic.html', '_blank');
+        
+        // 延迟5秒后在控制台输出测试命令
+        setTimeout(() => {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = `
+                <h2>在主页面控制台运行以下命令:</h2>
+                <pre style="background: #f5f5f5; padding: 10px;">
+// 1. 检查台站图层实例是否存在
+console.log('台站图层实例:', window.stationLayer);
+
+// 2. 检查图层树管理器中的实例注册
+console.log('图层实例列表:', window.layerTreeManager.layerInstances);
+
+// 3. 检查checkbox是否存在
+const stationCheckbox = document.querySelector('[data-instance-key="stationLayer"]');
+console.log('台站checkbox:', stationCheckbox);
+
+// 4. 检查checkbox的事件监听器
+if (stationCheckbox) {
+    console.log('checkbox状态:', {
+        checked: stationCheckbox.checked,
+        disabled: stationCheckbox.disabled,
+        classList: Array.from(stationCheckbox.classList)
+    });
+}
+
+// 5. 手动测试点击
+if (stationCheckbox) {
+    console.log('=== 手动触发 change 事件 ===');
+    stationCheckbox.checked = !stationCheckbox.checked;
+    stationCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// 6. 手动调用 show/hide 方法
+if (window.stationLayer) {
+    console.log('=== 手动调用 show() ===');
+    window.stationLayer.show();
+    console.log('调用后 isVisible:', window.stationLayer.isVisible);
+    console.log('调用后 dataSource.show:', window.stationLayer.dataSource?.show);
+}
+                </pre>
+            `;
+        }, 3000);
+    </script>
+</body>
+</html>

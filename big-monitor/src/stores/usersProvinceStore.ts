@@ -3,8 +3,8 @@ import { defineStore } from "pinia";
 
 export const useProvinceStore = defineStore("province", {
   state: () => ({
-    name: "四川省",           // 默认省份
-    adcode: "510000",        // 默认省份 adcode
+    name: "辽宁省",           // 默认省份
+    adcode: "210000",        // 默认省份 adcode
     center: [104.066540, 30.572269] as [number, number], // 默认省会坐标
   }),
   actions: {

@@ -1,0 +1,134 @@
+{
+  "layerGroups": [
+    {
+      "id": "geological-data",
+      "name": "地质数据",
+      "icon": "📁",
+      "expanded": true,
+      "enabled": true,
+      "layers": [
+        {
+          "id": "fault-lines",
+          "name": "断层线",
+          "icon": "🔴",
+          "instanceKey": "faultLayer",
+          "className": "FaultLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示断层线数据"
+        },
+        {
+          "id": "generation-map",
+          "name": "五代图",
+          "icon": "🔵",
+          "instanceKey": "generationLayer",
+          "className": "GenerationLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示五代图数据"
+        }
+      ]
+    },
+    {
+      "id": "seismic-data",
+      "name": "地震数据",
+      "icon": "📁",
+      "expanded": true,
+      "enabled": true,
+      "layers": [
+        {
+          "id": "earthquakes",
+          "name": "地震事件",
+          "icon": "⚡",
+          "instanceKey": "earthquakeLayer",
+          "className": "EarthquakeLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示地震事件数据"
+        },
+        {
+          "id": "stations",
+          "name": "台站",
+          "icon": "📡",
+          "instanceKey": "stationLayer",
+          "className": "StationLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示台站数据"
+        }
+      ]
+    },
+    {
+      "id": "administrative-boundaries",
+      "name": "行政界线",
+      "icon": "📁",
+      "expanded": true,
+      "enabled": true,
+      "layers": [
+        {
+          "id": "country-boundary",
+          "name": "国界",
+          "icon": "🇨🇳",
+          "instanceKey": "countryBoundary",
+          "className": "CountryBoundaryLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示中国国界"
+        },
+        {
+          "id": "province-boundary",
+          "name": "省界",
+          "icon": "🏛️",
+          "instanceKey": "provinceBoundary",
+          "className": "ProvinceBoundaryLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示中国省界"
+        },
+        {
+          "id": "city-boundary",
+          "name": "市界",
+          "icon": "🏙️",
+          "instanceKey": "cityBoundary",
+          "className": "CityBoundaryLayer",
+          "defaultChecked": false,
+          "enabled": true,
+          "description": "显示中国市界"
+        }
+      ]
+    },
+    {
+      "id": "underground-research-areas",
+      "name": "地下研究区域",
+      "icon": "📁",
+      "expanded": true,
+      "enabled": true,
+      "layers": [
+        {
+          "id": "chuandian-area",
+          "name": "川滇地区",
+          "icon": "📍",
+          "instanceKey": "chuandianArea",
+          "className": "ResearchAreaLayer",
+          "defaultChecked": true,
+          "enabled": true,
+          "description": "川滇地区地下速度场研究区域",
+          "bounds": {
+            "minLon": 97.0,
+            "maxLon": 108.0,
+            "minLat": 21.0,
+            "maxLat": 34.0
+          },
+          "datasetPath": "/data/datasets/velocity-field-chuandian"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "defaultExpandAll": true,
+    "defaultCheckAll": false,
+    "allowMultipleSelection": true,
+    "showIcons": true,
+    "showDescription": false
+  }
+}

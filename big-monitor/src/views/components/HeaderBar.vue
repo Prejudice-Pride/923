@@ -18,7 +18,7 @@
 
     <div class="center">
       <dv-border-box-8 class="title-border">
-        <h1 class="page-title">国家地震活动监测可视化系统</h1>
+        <h1 class="page-title">辽宁省地震活动监测可视化系统</h1>
       </dv-border-box-8>
     </div>
 

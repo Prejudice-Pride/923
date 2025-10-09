@@ -1,0 +1,499 @@
+/* 精致工具栏 - 与主界面风格统一 */
+
+/* ========== 坐标系切换按钮组样式 ========== */
+.coordinate-system-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+}
+
+.coordinate-system-group .coord-btn {
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+.coordinate-system-group .coord-btn:first-child {
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
+}
+
+.coordinate-system-group .coord-btn:last-child {
+  border-bottom-left-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+
+.coordinate-system-group .coord-btn.active {
+  background: rgba(66, 133, 244, 0.2);
+  border: 1px solid #4285f4;
+  box-shadow: 0 0 8px rgba(66, 133, 244, 0.3);
+}
+
+.coordinate-system-group .coord-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ========== 工具栏按钮组 ========== */
+.floating-toolbar {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1000;
+}
+
+.toolbar-buttons {
+  display: flex;
+  background: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.toolbar-tab-btn {
+  padding: 8px 12px;
+  background: #353535;
+  border: none;
+  border-right: 1px solid #444444;
+  color: #e5e5e5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0;
+}
+
+.toolbar-tab-btn:last-child {
+  border-right: none;
+}
+
+.toolbar-tab-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.toolbar-tab-btn:hover {
+  background: #4a4a4a;
+  color: #ffffff;
+}
+
+.toolbar-tab-btn.active {
+  background: #0078d4;
+  color: #ffffff;
+  border-color: #005a9e;
+}
+
+/* ========== 浮动面板（底图、图层） ========== */
+.toolbar-panel {
+  position: fixed;
+  top: 55px;
+  right: 15px;
+  width: 280px;
+  max-height: calc(100vh - 75px);
+  background: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+}
+
+.toolbar-panel.show {
+  display: flex;
+}
+
+.toolbar-panel-header {
+  padding: 10px 12px;
+  background: #353535;
+  border-bottom: 1px solid #444444;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e5e5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.toolbar-panel-title svg {
+  width: 14px;
+  height: 14px;
+  fill: #0078d4;
+}
+
+.toolbar-panel-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  background: transparent;
+  border: 1px solid #555555;
+  color: #c0c0c0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.toolbar-panel-close:hover {
+  background: #4a4a4a;
+  color: #ffffff;
+  border-color: #666666;
+}
+
+.toolbar-panel-content {
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.toolbar-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-track {
+  background: #2b2b2b;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-thumb {
+  background: #555555;
+  border-radius: 3px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-thumb:hover {
+  background: #666666;
+}
+
+/* ========== 底图网格 ========== */
+.basemap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.basemap-item {
+  cursor: pointer;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #555555;
+  transition: all 0.2s;
+  background: #353535;
+}
+
+.basemap-item:hover {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4;
+}
+
+.basemap-item.active {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 2px #0078d4;
+}
+
+.basemap-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.basemap-label {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #e5e5e5;
+  background: #383838;
+}
+
+/* ========== 树形结构（图层） ========== */
+.layer-tree {
+  padding: 10px 0;
+}
+
+.tree-node {
+  position: relative;
+  user-select: none;
+}
+
+.tree-node-content {
+  display: flex;
+  align-items: center;
+  padding: 8px 15px 8px 0;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.tree-node-content:hover {
+  background: #3838;
+}
+
+.tree-node.selected > .tree-node-content {
+  background: #0078d4 !important;
+  color: #ffffff;
+}
+
+/* 缩进系统 */
+.tree-indent {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.indent-level {
+  width: 20px;
+  height: 100%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* 垂直实线 */
+.indent-level.has-line::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #555555;
+}
+
+/* 水平实线 */
+.indent-level.has-line::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background: #555555;
+}
+
+/* 最后一个子节点的垂直线只到中点 */
+.tree-node:last-child > .tree-node-content .indent-level.has-line::before {
+  bottom: 50%;
+}
+
+/* 展开/折叠箭头 */
+.tree-toggle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #c0c0c0;
+  font-size: 12px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 15px;
+  border-radius: 2px;
+}
+
+.tree-toggle:hover {
+  color: #ffffff;
+  background: #404040;
+}
+
+.tree-node.collapsed > .tree-node-content .tree-toggle {
+  transform: rotate(-90deg);
+}
+
+.tree-toggle.placeholder {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 复选框 */
+.tree-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0 8px;
+  flex-shrink: 0;
+  accent-color: #0078d4;
+}
+
+/* 图标 */
+.tree-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* 标签 */
+.tree-label {
+  flex: 1;
+  font-size: 13px;
+  color: #e5e5e5;
+}
+
+/* 子节点容器 */
+.tree-children {
+  overflow: hidden;
+  max-height: 5000px;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tree-node.collapsed > .tree-children {
+  max-height: 0 !important;
+}
+
+/* 透明度滑块 */
+.layer-opacity {
+  padding: 8px 40px;
+  background: #353535;
+  border-top: 1px solid #444444;
+  display: none;
+}
+
+.tree-node.selected > .layer-opacity {
+  display: block;
+}
+
+.opacity-label {
+  font-size: 11px;
+  color: #c0c0c0;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.opacity-input {
+  width: 100%;
+  height: 3px;
+  -webkit-appearance: none;
+  background: #555555;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.opacity-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0078d4;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.opacity-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* ========== 下拉菜单（工具） ========== */
+.tool-dropdown {
+  position: fixed;
+  top: 46px;
+  right: 15px;
+  min-width: 160px;
+  background: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: none;
+}
+
+.tool-dropdown.show {
+  display: block;
+}
+
+.tool-menu-list {
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+}
+
+.tool-menu-item {
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid #333333;
+}
+
+.tool-menu-item:last-child {
+  border-bottom: none;
+}
+
+.tool-menu-item:hover {
+  background: #353535;
+}
+
+.tool-menu-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0078d4;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.tool-menu-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.tool-menu-text {
+  flex: 1;
+  font-size: 13px;
+  color: #e5e5e5;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .floating-toolbar {
+    right: 12px;
+    top: 12px;
+  }
+
+  .toolbar-panel {
+    width: calc(100vw - 24px);
+    right: 12px;
+    top: 80px;
+  }
+
+  .basemap-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .toolbar-tab-btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+
+  .toolbar-tab-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+}

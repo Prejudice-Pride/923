@@ -1,0 +1,422 @@
+/* ==========================================
+   浮动工具栏 - 严格按照参考图树形结构
+   ========================================== */
+
+.floating-toolbar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* ========== 按钮组 ========== */
+.toolbar-buttons {
+  display: flex;
+  gap: 0;
+  background: rgba(50, 58, 75, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.toolbar-tab-btn {
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.toolbar-tab-btn:last-child {
+  border-right: none;
+}
+
+.toolbar-tab-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.toolbar-tab-btn:hover {
+  background: rgba(70, 130, 180, 0.3);
+  color: #fff;
+}
+
+.toolbar-tab-btn.active {
+  background: rgba(70, 120, 170, 0.3);
+  color: #fff;
+}
+
+/* ========== 面板容器 ========== */
+.toolbar-panel {
+  position: fixed;
+  top: 72px;
+  right: 20px;
+  width: 272px;  /* 340px减少1/5 = 272px */
+  max-height: calc(100vh - 100px);
+  background: rgba(30, 38, 52, 0.98);
+  backdrop-filter: blur(25px);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  animation: slideIn 0.25s ease;
+  z-index: 10000;  /* 确保覆盖所有底部按钮 */
+}
+
+.toolbar-panel.show {
+  display: flex;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 面板头部 */
+.toolbar-panel-header {
+  padding: 13px 16px;
+  background: rgba(20, 25, 35, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-panel-title {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-panel-close {
+  width: auto;
+  height: auto;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-panel-close:hover {
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+}
+
+/* 面板内容 */
+.toolbar-panel-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.toolbar-panel-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.toolbar-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* ========== 底图面板 ========== */
+.basemap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.basemap-item {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.25s ease;
+  background: rgba(20, 25, 35, 0.6);
+}
+
+.basemap-item:hover {
+  border-color: rgba(100, 180, 255, 0.6);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(100, 180, 255, 0.2);
+}
+
+.basemap-item.active {
+  border-color: rgba(100, 180, 255, 1);
+  box-shadow: 0 0 0 3px rgba(100, 180, 255, 0.25);
+}
+
+.basemap-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.basemap-label {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(20, 25, 35, 0.95);
+}
+
+.terrain-option {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: rgba(20, 25, 35, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terrain-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.terrain-option input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: rgba(100, 180, 255, 1);
+}
+
+/* ========== 图层面板 - 树形结构 ========== */
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.layer-group {
+  background: rgba(20, 25, 35, 0.4);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.layer-group-header {
+  padding: 11px 14px;
+  background: rgba(35, 45, 60, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.layer-group-header:hover {
+  background: rgba(45, 55, 70, 0.6);
+}
+
+.layer-group-title {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.88);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-group-toggle {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  transition: transform 0.25s ease;
+}
+
+.layer-group.collapsed .layer-group-toggle {
+  transform: rotate(-90deg);
+}
+
+.layer-group-content {
+  max-height: 600px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.layer-group.collapsed .layer-group-content {
+  max-height: 0;
+}
+
+/* 图层项 - 带缩进的树形节点 */
+.layer-item {
+  padding: 9px 14px 9px 36px; /* 左侧36px缩进！ */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.layer-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.layer-item:first-child {
+  border-top: none;
+}
+
+.layer-checkbox {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: rgba(100, 180, 255, 1);
+  flex-shrink: 0;
+}
+
+.layer-icon {
+  font-size: 17px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.layer-name {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* ========== 工具面板 ========== */
+.tool-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tool-menu-item {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  border-radius: 0;
+}
+
+.tool-menu-item:hover {
+  background: rgba(60, 100, 140, 0.25);
+}
+
+.tool-menu-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(100, 180, 255, 0.95);
+  flex-shrink: 0;
+}
+
+.tool-menu-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.tool-menu-text {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tool-menu-item.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tool-menu-item.disabled:hover {
+  background: rgba(20, 25, 35, 0.3);
+}
+
+/* 工具下拉菜单容器 */
+.tool-dropdown {
+  position: fixed;
+  top: 68px;
+  right: 20px;
+  width: 200px;
+  background: rgba(38, 44, 58, 0.98);
+  backdrop-filter: blur(15px);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: none;
+  z-index: 10100; /* 高于面板的z-index(10000) */
+}
+
+.tool-dropdown.show {
+  display: block;
+}
+
+/* ========== UI禁用状态（地下模式时） ========== */
+.toolbar-panel.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  position: relative;
+}
+
+.toolbar-panel.disabled::after {
+  content: '地下模式已禁用';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 16px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.tool-menu-item.disabled {
+  pointer-events: none;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.toolbar-tab-btn.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}

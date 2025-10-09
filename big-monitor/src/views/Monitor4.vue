@@ -17,7 +17,7 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
         <div class="card">
           <div class="card-title">地震目录</div>
           <div class="card-body">
-            <earthquake-table />
+            <!-- <earthquake-table /> -->
           </div>
         </div>
       </div>
@@ -26,7 +26,7 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
         <div class="card">
           <div class="card-title">地震分布图</div>
           <div class="card-body">
-            <earthquake-map />
+            <!-- <earthquake-map /> -->
           </div>
         </div>
       </div>

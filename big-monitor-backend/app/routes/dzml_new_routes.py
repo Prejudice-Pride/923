@@ -16,84 +16,56 @@ def list_earthquakes():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# 分页展示全国地震信息
-@dzml_new_bp.route("/page", methods=["GET"])
-def list_earthquakes_paginated():
+from flask import Blueprint, jsonify, request
+from app import db
+from app.models.dzml_new import DzmlNew
+from app.schemas.dzml_new_schemas import DzmlNewSchema
+
+dzml_new_bp = Blueprint("dzml_new", __name__)
+dzml_new_schema = DzmlNewSchema(many=True)
+
+
+@dzml_new_bp.route("/all", methods=["GET"])
+def list_earthquakes():
+    """返回所有地震信息"""
     try:
-        page = int(request.args.get("page", 1))
-        size = int(request.args.get("size", 10))
-
-        query = DzmlNew.query
-        total = query.count()
-        items = query.offset((page - 1) * size).limit(size).all()
-
-        data = dzml_new_schema.dump(items)
-        return jsonify({"data": data, "total": total, "page": page, "size": size})
+        all_data = DzmlNew.query.all()
+        data = dzml_new_schema.dump(all_data)
+        return jsonify({"data": data, "total": len(data)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# 聚合展示全国地震信息
-@dzml_new_bp.route("/aggregated", methods=["GET"])
-def aggregated_earthquakes():
+# 测试路径 http://127.0.0.1:5000/dzml_new/province?name=辽宁省
+@dzml_new_bp.route("/province", methods=["GET"])
+def get_earthquakes_by_province():
+    """
+    按省份（根据地名字段 DiMing 自动匹配）查询地震信息
+    示例：
+        GET dzml_new/province?name=辽宁省
+        GET dzml_new/province?name=辽宁
+    """
     try:
-        all_data = DzmlNew.query.all()  # ORM 对象列表
+        province_name = request.args.get("name", "").strip()
+        if not province_name:
+            return jsonify({"error": "缺少参数 name（省份名称）"}), 400
 
-        grouped = {}
+        # 读取数据库全部地震数据
+        all_data = DzmlNew.query.all()
+
+        # 按照地名字段 DiMing 匹配所属省份
+        filtered = []
         for record in all_data:
             province = extract_province(record.DiMing)
-            if province not in grouped:
-                grouped[province] = {
-                    "count": 0,
-                    "max_magnitude": None,
-                    "latest_time": None,
-                    "examples": [],
-                }
+            if province_name.replace("省", "").replace("市", "") in province:
+                filtered.append(record)
 
-            grouped[province]["count"] += 1
-
-            # 最大震级
-            mc_val = float(record.mc) if record.mc is not None else None
-            if mc_val is not None:
-                if grouped[province]["max_magnitude"] is None or mc_val > grouped[province]["max_magnitude"]:
-                    grouped[province]["max_magnitude"] = mc_val
-
-            # 最新时间
-            if record.RiQi:
-                if grouped[province]["latest_time"] is None or record.RiQi > grouped[province]["latest_time"]:
-                    grouped[province]["latest_time"] = record.RiQi
-
-            # 示例数据（最多 3 条）
-            if len(grouped[province]["examples"]) < 3:
-                grouped[province]["examples"].append(
-                    {
-                        "diming": record.DiMing,
-                        "magnitude": mc_val,
-                        "time": record.RiQi.strftime("%Y-%m-%d %H:%M:%S") if record.RiQi else None,
-                    }
-                )
-
-        results = []
-        for province, stats in grouped.items():
-            entry = {
-                "province": province,
-                "count": stats["count"],
-                "max_magnitude": stats["max_magnitude"],
-                "latest_time": stats["latest_time"].strftime("%Y-%m-%d %H:%M:%S")
-                if stats["latest_time"] else None,
-                "examples": stats["examples"],
-            }
-
-            if province in PROVINCE_CAPITALS:
-                entry["capital"] = province
-                entry["coord"] = PROVINCE_CAPITALS[province]
-            else:
-                entry["capital"] = None
-                
-                entry["coord"] = None
-
-            results.append(entry)
-
-        return jsonify({"data": results, "total_provinces": len(results)})
+        # 序列化
+        data = dzml_new_schema.dump(filtered)
+        return jsonify({
+            "province": province_name,
+            "count": len(data),
+            "data": data
+        })
 
     except Exception as e:
         import traceback
@@ -101,7 +73,10 @@ def aggregated_earthquakes():
         return jsonify({"error": str(e)}), 500
 
 
-# 省份到省会坐标（GCJ-02，适配高德地图）
+# ----------------------------
+# 辅助函数和省份字典（与聚合代码共用）
+# ----------------------------
+
 PROVINCE_CAPITALS = {
     "北京": [116.4074, 39.9042],
     "天津": [117.2000, 39.1333],
@@ -140,11 +115,69 @@ PROVINCE_CAPITALS = {
 }
 
 
-# 解析省份
 def extract_province(diming: str) -> str:
+    """根据地名字符串解析出所属省份"""
     if not diming:
         return "未知"
     for province in PROVINCE_CAPITALS.keys():
         if province in diming:
             return province
     return "未知"
+
+# 测试路径示例：
+# http://127.0.0.1:5000/dzml_new/province/page?name=辽宁&page=1&size=10
+
+@dzml_new_bp.route("/province/page", methods=["GET"])
+def get_earthquakes_by_province_paginated():
+    """
+    按省份分页查询地震信息（根据 DiMing 自动匹配省份）
+    示例：
+        GET /dzml_new/province/page?name=辽宁&page=1&size=10
+    """
+    try:
+        # 获取查询参数
+        province_name = request.args.get("name", "").strip()
+        page = int(request.args.get("page", 1))
+        size = int(request.args.get("size", 10))
+
+        if not province_name:
+            return jsonify({"error": "缺少参数 name（省份名称）"}), 400
+
+        # ------------------------
+        # Step 1: 读取全部数据（后续可优化为数据库模糊匹配）
+        # ------------------------
+        all_data = DzmlNew.query.all()
+
+        # Step 2: 过滤出匹配指定省份的数据
+        filtered = []
+        for record in all_data:
+            province = extract_province(record.DiMing)
+            if province_name.replace("省", "").replace("市", "") in province:
+                filtered.append(record)
+
+        # ------------------------
+        # Step 3: 手动分页
+        # ------------------------
+        total = len(filtered)
+        start = (page - 1) * size
+        end = start + size
+        paged_data = filtered[start:end]
+
+        # Step 4: 序列化
+        data = dzml_new_schema.dump(paged_data)
+
+        # Step 5: 返回分页结果
+        return jsonify({
+            "province": province_name,
+            "page": page,
+            "size": size,
+            "total": total,
+            "pages": (total + size - 1) // size,  # 计算总页数
+            "count": len(data),
+            "data": data
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500

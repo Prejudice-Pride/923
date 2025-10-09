@@ -1,7 +1,21 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import HeaderBar from "./components/HeaderBar.vue";
-import EarthquakeMap from "./components/EarthquakeMap.vue";
-import EarthquakeTable from "./components/EarthquakeTable.vue";
+import StationMap from './components/StationMap.vue';
+import StationTable from './components/StationTable.vue';
+import StationCharts from './components/StationCharts.vue';
+
+const earthquakeData = ref([]);
+
+onMounted(async () => {
+  try {
+    const response = await fetch('http://127.0.0.1:5000/dzml_new/page?page=1&size=10');
+    const data = await response.json();
+    earthquakeData.value = data.data || [];
+  } catch (error) {
+    console.error('Failed to fetch earthquake data:', error);
+  }
+});
 </script>
 
 <template>
@@ -17,7 +31,7 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
         <div class="card">
           <div class="card-title">台站目录</div>
           <div class="card-body">
-            <earthquake-table />
+            <StationTable />
           </div>
         </div>
       </div>
@@ -26,7 +40,7 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
         <div class="card">
           <div class="card-title">台站分布图</div>
           <div class="card-body">
-            <earthquake-map />
+            <StationMap />
           </div>
         </div>
       </div>
@@ -35,7 +49,7 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
         <div class="card">
           <div class="card-title">右侧面板</div>
           <div class="card-body">
-            这里可以放置图例、筛选条件、说明等。
+            <StationCharts />
           </div>
         </div>
       </div>
@@ -242,5 +256,4 @@ import EarthquakeTable from "./components/EarthquakeTable.vue";
   min-height: 0;
   min-width: 0;
 }
-
 </style>

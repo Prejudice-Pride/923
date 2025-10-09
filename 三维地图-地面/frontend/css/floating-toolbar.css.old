@@ -1,0 +1,453 @@
+/* 浮动工具栏样式 - 严格按照参考图 */
+.floating-toolbar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+}
+
+/* 工具栏按钮组 */
+.toolbar-buttons {
+  display: flex;
+  gap: 0;
+  background: rgba(30, 30, 40, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  overflow: hidden;
+}
+
+/* 工具栏按钮 */
+.toolbar-tab-btn {
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-right: 1px solid rgba(100, 200, 255, 0.1);
+  position: relative;
+}
+
+.toolbar-tab-btn:last-child {
+  border-right: none;
+}
+
+.toolbar-tab-btn:hover {
+  background: rgba(79, 195, 247, 0.1);
+  color: #4fc3f7;
+}
+
+.toolbar-tab-btn.active {
+  background: rgba(79, 195, 247, 0.2);
+  color: #4fc3f7;
+}
+
+.toolbar-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #4fc3f7;
+}
+
+/* 按钮图标 */
+.toolbar-tab-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* 面板容器 */
+.toolbar-panel {
+  position: fixed;
+  top: 75px;
+  right: 20px;
+  width: 360px;
+  max-height: calc(100vh - 100px);
+  background: rgba(30, 30, 40, 0.98);
+  backdrop-filter: blur(15px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  overflow: hidden;
+  display: none;
+  animation: slideInRight 0.3s ease;
+}
+
+.toolbar-panel.show {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 面板头部 */
+.toolbar-panel-header {
+  padding: 16px 20px;
+  background: rgba(79, 195, 247, 0.1);
+  border-bottom: 1px solid rgba(100, 200, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #4fc3f7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-panel-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-panel-close:hover {
+  background: rgba(255, 59, 48, 0.2);
+  border-color: rgba(255, 59, 48, 0.4);
+  color: #ff3b30;
+}
+
+/* 面板内容 */
+.toolbar-panel-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.toolbar-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(79, 195, 247, 0.3);
+  border-radius: 3px;
+}
+
+.toolbar-panel-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 195, 247, 0.5);
+}
+
+/* 底图选项网格 */
+.basemap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.basemap-item {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(100, 200, 255, 0.2);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.basemap-item:hover {
+  border-color: rgba(79, 195, 247, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 195, 247, 0.2);
+}
+
+.basemap-item.active {
+  border-color: #4fc3f7;
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+}
+
+.basemap-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.basemap-label {
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(30, 30, 40, 0.9);
+}
+
+/* 地形显示选项 */
+.terrain-option {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(100, 200, 255, 0.1);
+}
+
+.terrain-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.terrain-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* 图层列表 */
+.layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-group {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(100, 200, 255, 0.1);
+}
+
+.layer-group-header {
+  padding: 12px 15px;
+  background: rgba(79, 195, 247, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.layer-group-header:hover {
+  background: rgba(79, 195, 247, 0.12);
+}
+
+.layer-group-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-group-toggle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.layer-group.collapsed .layer-group-toggle {
+  transform: rotate(-90deg);
+}
+
+.layer-group-content {
+  max-height: 500px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.layer-group.collapsed .layer-group-content {
+  max-height: 0;
+}
+
+.layer-item {
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(100, 200, 255, 0.05);
+}
+
+.layer-item:first-child {
+  border-top: none;
+}
+
+.layer-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #4fc3f7;
+}
+
+.layer-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layer-name {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.layer-slider {
+  margin-left: 38px;
+  margin-top: 8px;
+  padding-bottom: 8px;
+}
+
+.layer-slider-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.layer-slider input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.layer-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4fc3f7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layer-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.6);
+}
+
+/* 工具菜单 */
+.tool-menu {
+  display: none;
+}
+
+.tool-menu.show {
+  display: block;
+}
+
+.tool-menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tool-menu-item {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(100, 200, 255, 0.05);
+}
+
+.tool-menu-item:last-child {
+  border-bottom: none;
+}
+
+.tool-menu-item:hover {
+  background: rgba(79, 195, 247, 0.1);
+  padding-left: 20px;
+}
+
+.tool-menu-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4fc3f7;
+}
+
+.tool-menu-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.tool-menu-text {
+  flex: 1;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tool-menu-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tool-menu-item.disabled:hover {
+  background: transparent;
+  padding-left: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .floating-toolbar {
+    right: 10px;
+    top: 10px;
+  }
+
+  .toolbar-panel {
+    width: calc(100vw - 20px);
+    right: 10px;
+    top: 65px;
+  }
+
+  .basemap-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .toolbar-tab-btn {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+}

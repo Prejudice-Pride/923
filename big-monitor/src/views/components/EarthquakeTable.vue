@@ -11,7 +11,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="quake in earthquakes" :key="quake.key">
+        <tr v-for="quake in paginatedEarthquakes" :key="quake.key">
           <td class="col-time" :title="formatDate(quake)">{{ formatDate(quake) }}</td>
           <td class="col-place">{{ quake.DiMing }}</td>
           <td class="col-lon">{{ quake.lon }}</td>
@@ -22,13 +22,13 @@
 
     <!-- 分页控件 -->
     <div class="pagination">
-      <button :disabled="currentPage === 1" @click="goFirst">首页</button>
-      <button :disabled="currentPage === 1" @click="prevPage">上一页</button>
+      <button :disabled="currentPage === 1" @click="goToFirstPage">首页</button>
+      <button :disabled="currentPage === 1" @click="goToPreviousPage">上一页</button>
 
       <span>第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
 
-      <button :disabled="currentPage === totalPages" @click="nextPage">下一页</button>
-      <button :disabled="currentPage === totalPages" @click="goLast">末页</button>
+      <button :disabled="currentPage === totalPages" @click="goToNextPage">下一页</button>
+      <button :disabled="currentPage === totalPages" @click="goToLastPage">尾页</button>
 
       <div class="jump">
         跳转到
@@ -41,51 +41,69 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { useProvinceStore } from '../../stores/usersProvinceStore'
+import { defineProps, ref, computed, onMounted } from 'vue';
 
-// 后端记录的简化类型
-interface BackendEarthquake {
-  DiMing?: string
-  year?: number | string
-  month?: number | string
-  day?: number | string
-  hour?: number | string
-  min?: number | string
-  sec?: number | string
-  lon?: number | string
-  lat?: number | string
-  OldId?: string
-}
-
-// 前端展示类型
+// 定义 Earthquake 类型
 interface Earthquake {
-  year: number
-  month: number
-  day: number
-  hour: number
-  min: number
-  sec: number
-  lon: number
-  lat: number
-  DiMing: string
-  key: string
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  min: number;
+  sec: number;
+  lon: number;
+  lat: number;
+  DiMing: string;
+  key: string;
 }
 
-// Pinia 存储省份信息
-const provinceStore = useProvinceStore()
+const props = defineProps<{ earthquakes: Earthquake[] }>();
 
-// 状态
-const earthquakes = ref<Earthquake[]>([])
-const currentPage = ref<number>(1)
-const pageSize = 10
-const totalPages = ref<number>(1)
-const totalRecords = ref<number>(0)
-const loading = ref<boolean>(false)
-const jumpPage = ref<number | null>(null) // 输入的跳转页
+// 分页状态
+const currentPage = ref(1);
+const pageSize = 10;
+const totalPages = computed(() => Math.ceil(props.earthquakes.length / pageSize));
+const jumpPage = ref<number | null>(null);
 
-// 格式化时间
+// 计算当前页显示的数据
+const paginatedEarthquakes = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  return props.earthquakes.slice(start, start + pageSize);
+});
+
+// 分页方法
+function goToFirstPage() {
+  currentPage.value = 1;
+}
+
+function goToPreviousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+}
+
+function goToNextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+}
+
+function goToLastPage() {
+  currentPage.value = totalPages.value;
+}
+
+function goToPage() {
+  if (jumpPage.value) {
+    const page = Math.max(1, Math.min(totalPages.value, jumpPage.value));
+    currentPage.value = page;
+    jumpPage.value = null;
+  }
+}
+
+onMounted(() => {
+  console.log('Received earthquakes data:', props.earthquakes);
+});
+
 function formatDate(quake: Earthquake) {
   const y = quake.year
   const m = String(quake.month).padStart(2, '0')
@@ -96,64 +114,6 @@ function formatDate(quake: Earthquake) {
   return `${y}-${m}-${d} ${h}:${min}:${sec}`
 }
 
-// 后端 -> 前端映射
-function mapBackendToEarthquake(q: BackendEarthquake): Earthquake {
-  const year = Number(q.year ?? 0)
-  const month = Number(q.month ?? 0)
-  const day = Number(q.day ?? 0)
-  const hour = Number(q.hour ?? 0)
-  const min = Number(q.min ?? 0)
-  const sec = Number(q.sec ?? 0)
-  const lon = Number(q.lon ?? 0)
-  const lat = Number(q.lat ?? 0)
-  const DiMing = q.DiMing ?? ''
-  const key = q.OldId ?? `${year}-${month}-${day}-${hour}-${min}-${sec}`
-  return { year, month, day, hour, min, sec, lon, lat, DiMing, key }
-}
-
-// 拉取分页数据
-async function fetchPage(page: number) {
-  loading.value = true
-  try {
-    const res = await axios.get<{ data: BackendEarthquake[]; total: number }>(
-      'http://127.0.0.1:5000/dzml_new/page',
-      {
-        params: {
-          page,
-          size: pageSize,
-          province: provinceStore.name, // ✅ 附带省份信息
-        },
-      }
-    )
-
-    const { data, total } = res.data
-    totalRecords.value = total
-    totalPages.value = Math.max(1, Math.ceil((total || 0) / pageSize))
-    earthquakes.value = (data || []).map(mapBackendToEarthquake)
-    currentPage.value = page
-  } catch (err) {
-    console.error('获取地震数据失败', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 翻页
-function prevPage() { if (currentPage.value > 1) fetchPage(currentPage.value - 1) }
-function nextPage() { if (currentPage.value < totalPages.value) fetchPage(currentPage.value + 1) }
-function goFirst() { if (currentPage.value !== 1) fetchPage(1) }
-function goLast() { if (currentPage.value !== totalPages.value) fetchPage(totalPages.value) }
-function goToPage() {
-  if (!jumpPage.value) return
-  const page = Math.max(1, Math.min(totalPages.value, jumpPage.value))
-  fetchPage(page)
-  jumpPage.value = null
-}
-
-// 初始加载
-onMounted(() => {
-  fetchPage(1)
-})
 </script>
 
 <style scoped>

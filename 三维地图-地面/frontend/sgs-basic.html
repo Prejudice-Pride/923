@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>SGS 基础示例（简化版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Cesium 1.95 -->
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+  <!-- 提前设置 Cesium 静态资源基准路径，确保 Workers 能正确加载 -->
+  <script>window.CESIUM_BASE_URL = 'https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/';</script>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.95/Build/Cesium/Cesium.js" crossorigin="anonymous"></script>
+
+  <!-- Cesium Widget Library (罗盘和导航控件) -->
+  <link href="css/cesium-widget.min.css" rel="stylesheet" />
+  <script src="js/cesium-widget.min.js"></script>
+
+  <!-- SGS 官方库（本地相对路径，保持与原项目一致） -->
+  <script src="CesiumJS/SGSTerrainProvider.js"></script>
+  <script src="CesiumJS/SGSProvider.v2.js"></script>
+
+  <script>
+    // 修正 SGSTerrainProvider 请求：
+    // 1) 恢复使用库默认的弧度 bbox（不再做度制换算）
+    // 2) 可选：在 WMS 1.3.0(lat,lon) 与 1.1.1(lon,lat) 之间切换（仅改写轴序/协议标识，不改数值单位）
+    (function patchSgsGetRequestUrl(){
+      try {
+        if (window.SGSTerrainProvider && !window.__sgs_deg_bbox_patch) {
+          const proto = SGSTerrainProvider.prototype;
+          const reqFactor = function(self, level){
+            const r = Math.log(self._requestGridSize)/Math.log(2);
+            const k = Math.min(r, level);
+            return Math.pow(2, k);
+          };
+          // 轴序模式
+          window.__sgs_wms_axisMode = window.__sgs_wms_axisMode || 'wms111_lonlat';
+          window.toggleSgsAxisMode = function(){
+            window.__sgs_wms_axisMode = (window.__sgs_wms_axisMode === 'wms130_latlon') ? 'wms111_lonlat' : 'wms130_latlon';
+            console.log('[SGS] 已切换轴序模式 =>', window.__sgs_wms_axisMode);
+            try { location.reload(); } catch (_) {}
+          };
+
+          proto.getRequestUrl = function(x, y, level, optimizeFlag, asElevation){
+            const factor = optimizeFlag != null ? reqFactor(this, level) : 1;
+            const xx = optimizeFlag != null ? (x - (x % factor)) / factor : x;
+            const yy = optimizeFlag != null ? (y - (y % factor)) / factor : y;
+            const lvl = optimizeFlag != null ? level - Math.log(factor)/Math.log(2) : level;
+            // 注意：库本身用的是弧度，这里不做度制换算
+            const rect = this.tilingScheme.tileXYToNativeRectangle(xx, yy, lvl);
+            let optimizedOnly = (this.heightMapWidth * factor == 256 && optimizeFlag) ? 1 : 0;
+            if (asElevation) optimizedOnly = 0;
+            const south = rect.south;
+            const west  = rect.west;
+            const north = rect.north;
+            const east  = rect.east;
+            let url = this._urlTemplate
+              .replace("{optimizedOnly}", optimizedOnly)
+              .replace("{width}", this.heightMapWidth * factor)
+              .replace("{height}", this.heightMapHeight * factor)
+              .replace("{s}", this.sTag(xx, yy, lvl));
+
+            if (window.__sgs_wms_axisMode === 'wms111_lonlat') {
+              // 1.1.1 + SRS，bbox=west,south,east,north（lon,lat）
+              url = url
+                .replace('Version=1.3.0', 'Version=1.1.1')
+                .replace('CRS=EPSG:4326', 'SRS=EPSG:4326')
+                .replace('{south},{west},{north},{east}', '{west},{south},{east},{north}')
+                .replace('{west}', west)
+                .replace('{south}', south)
+                .replace('{east}', east)
+                .replace('{north}', north);
+            } else {
+              // 1.3.0 + CRS，bbox=south,west,north,east（lat,lon）
+              url = url
+                .replace('{south}', south)
+                .replace('{north}', north)
+                .replace('{west}', west)
+                .replace('{east}', east);
+            }
+
+            url += "&level=" + lvl + "&origLevel=" + level;
+            if (!this.__loggedOnce) { console.log('[SGS] 示例地形URL', url); this.__loggedOnce = true; }
+            return url;
+          };
+          window.__sgs_deg_bbox_patch = true;
+          console.log('[SGS] 使用弧度bbox，轴序模式=', window.__sgs_wms_axisMode);
+        }
+      } catch (err) {
+        console.warn('未能应用 SGSTerrainProvider 补丁', err);
+      }
+    })();
+
+    // SGS 服务器地址
+    window.SGS_SERVER = "http://124.17.4.220:24088/SG";
+
+    // 常量已在 SGSProvider.v2.js 中定义，这里只是确保全局可用
+    window._ResourceType = _ResourceType;
+    window._LayerType = _LayerType;
+  </script>
+
+
+  <link rel="stylesheet" href="css/main.css">
+  <!-- 加载动画系统样式 -->
+  <link rel="stylesheet" href="loading/loading.css">
+  <!-- 简单工具栏样式 -->
+  <link rel="stylesheet" href="css/toolbar-refined.css">
+  <link rel="stylesheet" href="css/tree-simple.css">
+  <link rel="stylesheet" href="css/floating-toolbar.css">
+  <!-- 导航控件位置调整 -->
+  <link rel="stylesheet" href="css/navigation-position.css">
+  <!-- 自定义导航控件 -->
+  <link rel="stylesheet" href="css/custom-navigation.css">
+</head>
+<body>
+  <!-- 加载动画页面 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <!-- 3D动画容器 -->
+    <div class="loading-animation-container">
+      <div id="loading-canvas"></div>
+    </div>
+
+    <!-- 加载信息面板 -->
+    <div class="loading-info">
+      <!-- 应用标题 -->
+      <div class="loading-title">三维地图可视化系统</div>
+
+      <!-- 加载状态文字 -->
+      <div class="loading-status" id="loadingStatus">
+        初始化应用<span class="loading-dots"></span>
+      </div>
+
+      <!-- 进度条容器 -->
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <!-- 进度百分比 -->
+      <div class="progress-text" id="progressText">0%</div>
+    </div>
+  </div>
+
+  <div id="cesiumContainer"></div>
+
+  <!-- 右上角水印 -->
+  <div class="watermark">2023YFC3007305-01</div>
+  
+  <!-- 专业GIS界面 - 仿照参考设计 -->
+
+  <!-- 左侧工具栏已移除 - 功能整合到右键菜单和右上角工具面板 -->
+
+  <!-- 右侧多功能控制面板（默认隐藏，保留备用） -->
+  <div class="right-panel hidden" style="display: none;">
+    <div class="panel-header">
+      <span class="panel-title">控件</span>
+      <button class="panel-close" onclick="toggleRightPanel()">×</button>
+    </div>
+    
+    <div class="panel-content">
+      <!-- 界面控件 - 紧凑型网格 -->
+      <div class="control-section">
+        <div class="section-title">界面控件</div>
+        <div class="control-grid-compact">
+          <label class="ctrl-item">
+            <input type="checkbox" id="cbHelp" checked>
+            <span>帮助</span>
+          </label>
+          <label class="ctrl-item">
+            <input type="checkbox" id="cbMapControl" checked>
+            <span>缩放</span>
+          </label>
+          <label class="ctrl-item">
+            <input type="checkbox" id="cbStatusInfo" checked>
+            <span>状态栏</span>
+          </label>
+          <label class="ctrl-item">
+            <input type="checkbox" id="cbNavBall" checked>
+            <span>导航球</span>
+          </label>
+          <label class="ctrl-item">
+            <input type="checkbox" id="cbCompareRule" checked>
+            <span>比例尺</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 图层管理 - 紧凑型布局 -->
+      <div class="control-section">
+        <div class="section-title">图层管理</div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🏔️ 地形</span>
+            <input type="checkbox" id="terrainToggle" class="native-switch">
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">夸张 <em id="lbExag">4.0×</em></span>
+            <input id="slExag" type="range" min="1" max="8" step="0.5" value="4" class="native-slider">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🛰️ 影像</span>
+            <input type="checkbox" id="imageryToggle" checked class="native-switch">
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">透明 <em id="lbOpacity">100%</em></span>
+            <input id="slOpacity" type="range" min="0" max="1" step="0.05" value="1" class="native-slider">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🌍 地震</span>
+            <input type="checkbox" id="earthquakeToggle" class="native-switch">
+          </div>
+          <div class="slider-row">
+            <span class="slider-label">震级 M<em id="lbMinMag">3.0</em>+</span>
+            <input id="slMinMagnitude" type="range" min="1" max="7" step="0.1" value="3.0" class="native-slider">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">📡 台站</span>
+            <input type="checkbox" id="stationToggle" class="native-switch">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🔴 断层</span>
+            <input type="checkbox" id="faultToggle" class="native-switch">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🗺️ 五代图</span>
+            <input type="checkbox" id="generationToggle" class="native-switch">
+          </div>
+        </div>
+
+        <div class="layer-compact">
+          <div class="layer-row">
+            <span class="layer-label">🌐 行政界线</span>
+          </div>
+          <div style="margin-left: 15px; margin-top: 5px;">
+            <div class="layer-row" style="font-size: 12px;">
+              <span class="layer-label">🌍 国界</span>
+              <input type="checkbox" id="countryBoundaryToggle" class="native-switch">
+            </div>
+            <div class="layer-row" style="font-size: 12px;">
+              <span class="layer-label">🗾 省界</span>
+              <input type="checkbox" id="provinceBoundaryToggle" class="native-switch">
+            </div>
+            <div class="layer-row" style="font-size: 12px;">
+              <span class="layer-label">🏘️ 市界</span>
+              <input type="checkbox" id="cityBoundaryToggle" class="native-switch">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 状态栏 - 精简版 -->
+  <div class="bottombar" id="bottombar">
+    <div class="status-group">
+      <span class="status-item" id="posLLBox"><span class="status-value coord" id="posLL">103.10344°, 24.12504°</span></span>
+      <span class="status-item">高程: <span class="status-value elevation" id="posH">5588</span>m</span>
+      <span class="status-item">视高: <span class="status-value camera-height" id="camH">19808</span>m</span>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <div class="status-group">
+      <span class="status-item">渲染: <span class="status-value">WebGL 2.0</span></span>
+      <span class="status-item">版本: <span class="status-value">Cesium 1.95</span></span>
+    </div>
+  </div>
+
+  <!-- 加载动画系统 -->
+  <script src="loading/loading-manager.js"></script>
+  <script src="loading/loading.js"></script>
+
+
+  <!-- 模块化JavaScript文件引用 -->
+  <script src="js/sgs-manager.js"></script>
+  <script src="js/map-controls.js"></script>
+  <script src="js/ui-controls.js"></script>
+  <script src="js/measure-tools.js"></script>
+  <script src="js/earthquake-layer.js"></script>
+  <script src="js/station-layer.js"></script>
+  <script src="js/fault-layer.js"></script>
+  <script src="js/generation-layer.js"></script>
+  <script src="js/country-boundary-layer.js"></script>
+  <script src="js/province-boundary-layer.js"></script>
+  <script src="js/city-boundary-layer.js"></script>
+  <script src="js/boundary-manager.js"></script>
+  <script src="js/research-area-layer.js"></script>
+  <script src="js/context-menu.js"></script>
+  <!-- 3D图层树管理器 -->
+  <script src="js/3d-layer-tree-manager.js"></script>
+  <!-- 3D工具栏组件 -->
+  <script src="js/3d-toolbar.js"></script>
+  <!-- 自定义导航控件 -->
+  <script src="js/custom-navigation.js"></script>
+  <!-- 距离比例尺 -->
+  <script src="js/distance-legend.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

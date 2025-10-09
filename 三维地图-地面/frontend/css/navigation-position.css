@@ -1,0 +1,33 @@
+/* 导航控件位置调整 - 精准居中对齐 */
+
+/* 罗盘位置 - 向上移动半个按钮高度 */
+.cesium-compass {
+  top: auto !important;
+  bottom: 315px !important;
+  right: 10px !important;
+  left: auto !important;
+  opacity: 0.88 !important;
+}
+
+/* 罗盘刻度线加粗 */
+.cesium-compass .out-ring {
+  opacity: 1 !important;
+}
+
+.cesium-compass .out-ring svg path,
+.cesium-compass .out-ring svg line {
+  stroke-width: 2 !important;
+  stroke: #ffffff !important;
+}
+
+/* 隐藏原 cesium-widget 缩放控制器 - 使用自定义按钮 */
+.cesium-zoom-controller {
+  display: none !important;
+}
+
+/* 距离刻度位置调整（如果启用） */
+.cesium-distance-legend {
+  left: auto !important;
+  right: 20px !important;
+  bottom: 10px !important;
+}
