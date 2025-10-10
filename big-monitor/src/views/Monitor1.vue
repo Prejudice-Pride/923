@@ -8,8 +8,9 @@ import EarthquakeCharts from './components/EarthquakeCharts.vue'
 // ---------------------------
 // ✅ 状态变量定义
 // ---------------------------
-const earthquakeData = ref([]) // 当前页的地震数据
-const provinceName = ref("辽宁") // 默认省份
+const earthquakeData = ref([]) // 分页数据（表格）
+const allEarthquakeData = ref([]) // 全部数据（图表）
+const provinceName = ref("辽宁")
 const page = ref(1)
 const size = ref(10)
 const total = ref(0)
@@ -39,20 +40,42 @@ async function fetchProvinceEarthquakes() {
 }
 
 // ---------------------------
+// ✅ 获取全部地震信息函数
+// ---------------------------
+async function fetchAllProvinceEarthquakes() {
+  try {
+    const url = `http://127.0.0.1:5000/dzml_new/province?name=${provinceName.value}`
+    const response = await fetch(url)
+    const result = await response.json()
+
+    if (response.ok) {
+      allEarthquakeData.value = result.data || []
+      console.log(`✅ 已获取 ${provinceName.value} 省全部地震数据，共 ${allEarthquakeData.value.length} 条`)
+    } else {
+      console.error("请求错误:", result.error)
+    }
+  } catch (error) {
+    console.error("获取全部地震数据失败:", error)
+  }
+}
+
+// ---------------------------
 // ✅ 生命周期：页面挂载时加载数据
 // ---------------------------
 onMounted(() => {
   fetchProvinceEarthquakes()
+  fetchAllProvinceEarthquakes()
 })
 
 // ---------------------------
-// ✅ 分页切换（可与分页组件绑定）
+// ✅ 分页切换
 // ---------------------------
 function handlePageChange(newPage: number) {
   page.value = newPage
   fetchProvinceEarthquakes()
 }
 </script>
+
 
 <template>
   <div class="app">
@@ -77,7 +100,7 @@ function handlePageChange(newPage: number) {
         <div class="card">
           <div class="card-title">地震分布图</div>
           <div class="card-body">
-            <EarthquakeMap :earthquakes="earthquakeData" />
+            <EarthquakeMap :allEarthquakes="allEarthquakeData" />
           </div>
         </div>
       </div>
@@ -85,9 +108,8 @@ function handlePageChange(newPage: number) {
       <!-- 右栏：统计或图表 -->
       <div class="column right">
         <div class="card">
-          <div class="card-title">统计分析</div>
           <div class="card-body">
-            <EarthquakeCharts :earthquakes="earthquakeData" />
+            <EarthquakeCharts :allEarthquakes="allEarthquakeData" />
           </div>
         </div>
       </div>

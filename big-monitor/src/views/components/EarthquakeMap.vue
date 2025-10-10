@@ -15,8 +15,8 @@ interface Earthquake {
   RiQi?: string;
 }
 
-// 确保 earthquakes 被正确定义为 props
-const props = defineProps<{ earthquakes: Earthquake[] }>();
+// props
+const props = defineProps<{ allEarthquakes: Earthquake[] }>();
 
 let map: any = null;
 
@@ -36,7 +36,7 @@ onMounted(() => {
         features: ["bg", "road", "point"],
       });
 
-      const markers: any[] = props.earthquakes.map((eq: Earthquake) => {
+      const markers: any[] = props.allEarthquakes.map((eq: Earthquake) => {
         const marker = new AMap.Marker({
           position: [eq.lon, eq.lat],
           content: `<div class='eq-marker'>${eq.mc || ""}</div>`,

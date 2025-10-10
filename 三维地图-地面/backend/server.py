@@ -6,7 +6,7 @@
 """
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -212,19 +212,26 @@ async def health_check():
     }
 
 
-@app.get("/sgs-proxy/{path:path}")
+@app.api_route("/sgs-proxy/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def sgs_proxy(path: str, request: Request):
-    """Skyline SGS代理"""
+    """通用 Skyline SGS 代理：转发 method、headers、body，返回原始响应内容和合适的 content-type"""
     try:
         client_ip = get_client_ip(request)
 
         # 构建目标URL
-        sgs_path = f"/SG/{path}"
         query_string = str(request.url.query)
         sgs_server = os.getenv('SGS_SERVER_URL', 'http://124.17.4.220:24088/SG')
-        target_url = f"{sgs_server}{sgs_path}"
+        sgs_server = sgs_server.rstrip('/')
+        if sgs_server.lower().endswith('/sg'):
+            target_base = sgs_server
+        else:
+            target_base = sgs_server + '/SG'
+
+        target_url = f"{target_base}/{path}"
         if query_string:
             target_url += f"?{query_string}"
+
+        print(f"🔁 代理目标: {target_url} (来自 {client_ip})")
 
         # 白名单验证
         from urllib.parse import urlparse
@@ -237,19 +244,32 @@ async def sgs_proxy(path: str, request: Request):
                 detail=f"不允许代理到主机: {target_host}"
             )
 
-        print(f"🔄 代理请求: {target_url} (来自 {client_ip})")
+        # 转发请求头（移除 Host，保留其他）
+        forward_headers = {k: v for k, v in request.headers.items() if k.lower() != 'host'}
 
-        # 获取认证信息
-        auth_headers = get_auth_headers()
+        # 读取请求 body
+        body = await request.body()
 
-        # 发起代理请求
-        response = requests.get(target_url, timeout=10, stream=True, headers=auth_headers)
-
-        # 返回代理响应
-        return JSONResponse(
-            content=response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text,
-            status_code=response.status_code
+        # 使用 requests 转发原始方法
+        resp = requests.request(
+            method=request.method,
+            url=target_url,
+            headers=forward_headers,
+            data=body if body else None,
+            timeout=15,
+            stream=True
         )
+
+        # 准备返回头（过滤掉不适合直传的头）
+        response_headers = {}
+        for hk, hv in resp.headers.items():
+            if hk.lower() in ('content-encoding', 'transfer-encoding', 'content-length', 'connection'):
+                continue
+            response_headers[hk] = hv
+
+        content = resp.content
+
+        return Response(content=content, status_code=resp.status_code, headers=response_headers, media_type=resp.headers.get('content-type'))
 
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=502, detail=f"代理错误: {str(e)}")

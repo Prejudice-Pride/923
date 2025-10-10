@@ -91,7 +91,23 @@
     })();
 
     // SGS 服务器地址
-    window.SGS_SERVER = "http://124.17.4.220:24088/SG";
+    // 在本地开发时使用后端代理以避免 CORS（代理路径: /sgs-proxy），
+    // 在生产/远程环境下使用真实的 SGS 地址。
+    (function(){
+      try {
+        const remote = 'http://124.17.4.220:24088/SG';
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          // 使用同源代理（相对或绝对都行）
+          window.SGS_SERVER = window.location.protocol + '//' + window.location.host + '/sgs-proxy';
+          console.log('[SGS] 使用本地代理 SG S 地址 =>', window.SGS_SERVER);
+        } else {
+          window.SGS_SERVER = remote;
+          console.log('[SGS] 使用远端 SGS 地址 =>', window.SGS_SERVER);
+        }
+      } catch (e) {
+        window.SGS_SERVER = 'http://124.17.4.220:24088/SG';
+      }
+    })();
 
     // 常量已在 SGSProvider.v2.js 中定义，这里只是确保全局可用
     window._ResourceType = _ResourceType;

@@ -191,7 +191,17 @@ async function initializeApplication() {
 
   } catch (error) {
     console.error('❌ 应用初始化失败:', error);
-    alert('应用初始化失败，请刷新页面重试。');
+    try {
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) {
+        statusEl.textContent = '应用初始化失败: ' + (error && (error.message || error.toString()));
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const errMsg = (error && (error.stack || error.message || String(error))) || 'Unknown error';
+    alert('应用初始化失败，请刷新页面重试。\n\n错误信息:\n' + errMsg);
   }
 }
 
