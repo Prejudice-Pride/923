@@ -1,96 +1,18 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import HeaderBar from "./components/HeaderBar.vue"
-import EarthquakeMap from "./components/EarthquakeMap.vue"
-import EarthquakeTable from "./components/EarthquakeTable.vue"
-import EarthquakeCharts from './components/EarthquakeCharts.vue'
-
-// ---------------------------
-// ✅ 状态变量定义
-// ---------------------------
-const earthquakeData = ref([]) // 分页数据（表格）
-const allEarthquakeData = ref([]) // 全部数据（图表）
-const provinceName = ref("辽宁")
-const page = ref(1)
-const size = ref(10)
-const total = ref(0)
-const loading = ref(false)
-
-// ---------------------------
-// ✅ 获取分页地震信息函数
-// ---------------------------
-async function fetchProvinceEarthquakes() {
-  loading.value = true
-  try {
-    const url = `http://127.0.0.1:5000/dzml_new/province/page?name=${provinceName.value}&page=${page.value}&size=${size.value}`
-    const response = await fetch(url)
-    const result = await response.json()
-
-    if (response.ok) {
-      earthquakeData.value = result.data || []
-      total.value = result.total || 0
-    } else {
-      console.error("请求错误:", result.error)
-    }
-  } catch (error) {
-    console.error("获取地震数据失败:", error)
-  } finally {
-    loading.value = false
-  }
-}
-
-// ---------------------------
-// ✅ 获取全部地震信息函数
-// ---------------------------
-async function fetchAllProvinceEarthquakes() {
-  try {
-    const url = `http://127.0.0.1:5000/dzml_new/province?name=${provinceName.value}`
-    const response = await fetch(url)
-    const result = await response.json()
-
-    if (response.ok) {
-      allEarthquakeData.value = result.data || []
-      console.log(`✅ 已获取 ${provinceName.value} 省全部地震数据，共 ${allEarthquakeData.value.length} 条`)
-    } else {
-      console.error("请求错误:", result.error)
-    }
-  } catch (error) {
-    console.error("获取全部地震数据失败:", error)
-  }
-}
-
-// ---------------------------
-// ✅ 生命周期：页面挂载时加载数据
-// ---------------------------
-onMounted(() => {
-  fetchProvinceEarthquakes()
-  fetchAllProvinceEarthquakes()
-})
-
-// ---------------------------
-// ✅ 分页切换
-// ---------------------------
-function handlePageChange(newPage: number) {
-  page.value = newPage
-  fetchProvinceEarthquakes()
-}
-</script>
-
-
 <template>
   <div class="app">
     <HeaderBar />
     <dv-decoration-8 style="width:100%;height:4px;" />
 
     <main class="main-content">
-      <!-- 左栏：地震目录 -->
+      <!-- 左栏：地震目录（显示全部数据） -->
       <div class="column left">
         <div class="card">
           <div class="card-title">
             {{ provinceName }}省地震目录
           </div>
           <div class="card-body">
-            <EarthquakeTable :earthquakes="earthquakeData" />
+            <!-- 不再传分页参数，直接传全部数据 -->
+            <EarthquakeTable :earthquakes="allEarthquakeData" />
           </div>
         </div>
       </div>
@@ -114,15 +36,59 @@ function handlePageChange(newPage: number) {
         </div>
       </div>
     </main>
-
-    <!-- ✅ 简易分页组件（可替换为 ElementPlus 等 UI 框架） -->
-    <div v-if="total > size" class="pagination">
-      <button :disabled="page === 1" @click="handlePageChange(page - 1)">上一页</button>
-      <span>第 {{ page }} / {{ Math.ceil(total / size) }} 页</span>
-      <button :disabled="page * size >= total" @click="handlePageChange(page + 1)">下一页</button>
-    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+import HeaderBar from "./components/HeaderBar.vue"
+import EarthquakeMap from "./components/EarthquakeMap.vue"
+import EarthquakeTable from "./components/EarthquakeTable.vue"
+import EarthquakeCharts from './components/EarthquakeCharts.vue'
+import { userProvinceStore } from '@/stores/usersProvinceStore'
+
+// ---------------------------
+// ✅ 状态变量
+// ---------------------------
+const allEarthquakeData = ref([]) // 全部数据
+const loading = ref(false)
+
+// ---------------------------
+// ✅ 获取省份信息
+// ---------------------------
+const provinceStore = userProvinceStore()
+const provinceName = computed(() => provinceStore.name)
+
+// ---------------------------
+// ✅ 获取全部地震信息函数
+// ---------------------------
+async function fetchAllProvinceEarthquakes() {
+  loading.value = true
+  try {
+    const url = `http://127.0.0.1:5000/dzml_new/province?name=${provinceName.value}`
+    const response = await fetch(url)
+    const result = await response.json()
+
+    if (response.ok) {
+      allEarthquakeData.value = result.data || []
+      console.log(`✅ 已获取 ${provinceName.value} 省全部地震数据，共 ${allEarthquakeData.value.length} 条`)
+    } else {
+      console.error("请求错误:", result.error)
+    }
+  } catch (error) {
+    console.error("获取全部地震数据失败:", error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// ---------------------------
+// ✅ 生命周期：页面挂载时加载数据
+// ---------------------------
+onMounted(() => {
+  fetchAllProvinceEarthquakes()
+})
+</script>
 
 <style scoped>
 .app {
@@ -134,7 +100,6 @@ function handlePageChange(newPage: number) {
   overflow: hidden;
 }
 
-/* 主体布局同前 */
 .main-content {
   display: flex;
   flex: 1;
@@ -151,6 +116,7 @@ function handlePageChange(newPage: number) {
   flex-direction: column;
   min-width: 0;
 }
+
 .column.center {
   flex: 2;
   display: flex;
@@ -164,7 +130,7 @@ function handlePageChange(newPage: number) {
   display: flex;
   flex-direction: column;
   background: rgba(0, 20, 40, 0.6);
-  border: 1px solid rgba(0,198,255,0.12);
+  border: 1px solid rgba(0, 198, 255, 0.12);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 0 12px rgba(0, 198, 255, 0.06);
@@ -175,7 +141,7 @@ function handlePageChange(newPage: number) {
   font-size: 16px;
   font-weight: bold;
   color: #00eaff;
-  border-bottom: 1px solid rgba(0,198,255,0.08);
+  border-bottom: 1px solid rgba(0, 198, 255, 0.08);
   background: rgba(0, 40, 80, 0.8);
   text-align: center;
 }
@@ -183,30 +149,5 @@ function handlePageChange(newPage: number) {
 .card-body {
   flex: 1;
   overflow: hidden;
-}
-
-/* ✅ 分页样式 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  font-size: 14px;
-  background: rgba(0, 20, 40, 0.4);
-  border-top: 1px solid rgba(0,198,255,0.12);
-}
-
-.pagination button {
-  background: rgba(0, 60, 100, 0.4);
-  border: 1px solid rgba(0,198,255,0.3);
-  color: #00eaff;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.pagination button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 </style>

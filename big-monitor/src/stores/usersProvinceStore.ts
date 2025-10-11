@@ -1,7 +1,7 @@
 // src/stores/useProvinceStore.ts
 import { defineStore } from "pinia";
 
-export const useProvinceStore = defineStore("province", {
+export const userProvinceStore = defineStore("province", {
   state: () => ({
     name: "辽宁省",           // 默认省份
     adcode: "210000",        // 默认省份 adcode

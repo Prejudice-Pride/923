@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { defineProps, computed, onMounted, watch, ref } from 'vue'
+import { defineProps, computed, onMounted, watch, ref, nextTick } from 'vue'
 import * as echarts from 'echarts'
 
 interface Earthquake {
   lon: number
   lat: number
   DiMing: string
-  mc?: string
-  RiQi?: string
+  mc: number
+  RiQi: string
 }
 
-// 接收父组件传来的 props
-const props = defineProps<{ allEarthquakes: Earthquake[] }>()
+// 接收父组件传来的 props（后端原始数组，字段可能命名与前端不同）
+const props = defineProps<{ allEarthquakes: any[] }>()
 
-// ⚡ 创建本地响应式变量，初始为 props.allEarthquakes
-const earthquakes = ref(props.allEarthquakes)
-
-// --------- 开发测试用：覆盖为模拟数据 ---------
-// 注释掉下面一段即可使用真实数据
-earthquakes.value = [
-  { lon: 123.4, lat: 41.8, DiMing: "辽宁省抚顺市", mc: "3.2", RiQi: "2025-09-15T10:23:00" },
-  { lon: 124.2, lat: 42.1, DiMing: "辽宁省沈阳市", mc: "2.8", RiQi: "2025-09-18T14:50:00" },
-  { lon: 124.2, lat: 42.1, DiMing: "辽宁省沈阳市", mc: "1.8", RiQi: "2025-09-18T16:50:00" },
-  { lon: 124.2, lat: 42.1, DiMing: "辽宁省沈阳市", mc: "1.2", RiQi: "2025-09-18T19:22:00" },
-  { lon: 123.9, lat: 41.9, DiMing: "辽宁省大连市", mc: "3.5", RiQi: "2025-09-20T08:12:00" },
-  { lon: 124.1, lat: 41.7, DiMing: "辽宁省鞍山市", mc: "4.1", RiQi: "2025-09-22T16:45:00" },
-  { lon: 123.5, lat: 42.0, DiMing: "辽宁省本溪市", mc: "2.5", RiQi: "2025-09-25T09:30:00" },
-  { lon: 124.0, lat: 41.85, DiMing: "辽宁省锦州市", mc: "3.8", RiQi: "2025-09-28T11:15:00" }
-]
+// 标准化后端数据：确保每条记录都有 lon/lat/DiMing/mc/RiQi 字段，并将 mc 转为 number
+const earthquakes = computed<Earthquake[]>(() => {
+  return (props.allEarthquakes || []).map((e: any) => {
+    const lon = e.lon ?? e.JingDu ?? e.JingDuString ?? e.longitude ?? null
+    const lat = e.lat ?? e.WeiDu ?? e.WeiDuString ?? e.latitude ?? null
+    const mcVal = e.mc ?? e.ZhenJiZhi ?? e.mag1 ?? e.ZhenJiZhi ?? null
+    return {
+      lon: lon != null ? Number(lon) : 0,
+      lat: lat != null ? Number(lat) : 0,
+      DiMing: e.DiMing ?? e.DiZhenWei ?? '' ,
+      mc: mcVal != null ? Number(mcVal) : 0,
+      RiQi: e.RiQi ?? e.RiQiString ?? e.RiQiText ?? ''
+    }
+  })
+})
 
 // --------------------------
 // 最近30天的地震数据
@@ -51,7 +51,7 @@ const chartAOptions = computed(() => {
   const data = filteredData.value.map(d => {
     const date = d.RiQi ? new Date(d.RiQi) : null
     const timeLabel = date ? `${date.getMonth() + 1}/${date.getDate()}` : '未知'
-    return { value: parseFloat(d.mc || '0'), time: timeLabel }
+    return { value: Number(d.mc ?? 0), time: timeLabel }
   })
 
   return {
@@ -124,10 +124,17 @@ const chartBOptions = computed(() => {
   const xData = Object.keys(dayCounts)
   const yData = Object.values(dayCounts)
 
+  // 转换为 [x, y] 结构
+  const scatterData = xData.map((x, i) => [x, yData[i]])
+
   return {
     tooltip: {
-      trigger: 'axis',
-      formatter: (p: any) => `${p[0].axisValue}<br/>次数：${p[0].data}`
+      trigger: 'item',
+      formatter: (p: any) => {
+        if (!p || !p.data) return ''
+        const [date, count] = p.data
+        return `日期：${date}<br/>次数：${count}`
+      }
     },
     grid: { top: 10, left: 50, right: 20, bottom: 50 },
     xAxis: {
@@ -151,14 +158,31 @@ const chartBOptions = computed(() => {
       splitLine: { lineStyle: { color: 'rgba(0,198,255,0.1)' } }
     },
     series: [
+      // 垂直线（每个点的线）
       {
-        type: 'bar',
-        data: yData,
-        itemStyle: { color: '#00eaff' }
+        type: 'line',
+        data: scatterData.map(([x, y]) => [x, y]),
+        lineStyle: { color: 'rgba(0,234,255,0.4)', width: 1 },
+        showSymbol: false,
+        smooth: false,
+        step: false
+      },
+      // 散点
+      {
+        type: 'scatter',
+        data: scatterData,
+        symbolSize: (val: any) => Math.max(6, val[1] * 2),
+        itemStyle: { color: '#00eaff' },
+        emphasis: {
+          scale: 1.5
+        }
       }
     ]
   }
 })
+
+
+
 
 // --------------------------
 // 图表C：震级分布图
@@ -171,7 +195,7 @@ const chartCOptions = computed(() => {
   const counts = Array(bins.length).fill(0)
 
   filteredData.value.forEach(e => {
-    const mag = parseFloat(e.mc || '0')
+    const mag = Number(e.mc ?? 0)
     for (let i = 0; i < bins.length; i++) {
       if (i === bins.length - 1) {
         if (mag >= bins[i]) counts[i] += 1
@@ -225,27 +249,50 @@ const chartCOptions = computed(() => {
 // 初始化图表
 // --------------------------
 onMounted(() => {
+  // 如果组件挂载时已经有数据，立即初始化图表；否则交由 watcher 在数据到达后初始化
   if (filteredData.value.length > 0) {
-    chartA = echarts.init(chartARef.value!)
-    chartA.setOption(chartAOptions.value)
-
-    chartB = echarts.init(chartBRef.value!)
-    chartB.setOption(chartBOptions.value)
-
-    chartC = echarts.init(chartCRef.value!)
-    chartC.setOption(chartCOptions.value)
+    if (chartARef.value) {
+      chartA = echarts.init(chartARef.value!)
+      chartA.setOption(chartAOptions.value)
+    }
+    if (chartBRef.value) {
+      chartB = echarts.init(chartBRef.value!)
+      chartB.setOption(chartBOptions.value)
+    }
+    if (chartCRef.value) {
+      chartC = echarts.init(chartCRef.value!)
+      chartC.setOption(chartCOptions.value)
+    }
   }
 })
 
-watch(filteredData, () => {
+watch(filteredData, async () => {
+  // 等待 DOM 更新，以确保 chartXRef 在切换 v-if 后可用
+  await nextTick()
+
   if (filteredData.value.length > 0) {
-    chartA && chartA.setOption(chartAOptions.value)
-    chartB && chartB.setOption(chartBOptions.value)
-    chartC && chartC.setOption(chartCOptions.value)
+    // Chart A
+    if (!chartA && chartARef.value) {
+      chartA = echarts.init(chartARef.value!)
+    }
+    if (chartA) chartA.setOption(chartAOptions.value)
+
+    // Chart B
+    if (!chartB && chartBRef.value) {
+      chartB = echarts.init(chartBRef.value!)
+    }
+    if (chartB) chartB.setOption(chartBOptions.value)
+
+    // Chart C
+    if (!chartC && chartCRef.value) {
+      chartC = echarts.init(chartCRef.value!)
+    }
+    if (chartC) chartC.setOption(chartCOptions.value)
   } else {
-    chartA && chartA.clear()
-    chartB && chartB.clear()
-    chartC && chartC.clear()
+    // 无数据时清空（如果已初始化）
+    if (chartA) chartA.clear()
+    if (chartB) chartB.clear()
+    if (chartC) chartC.clear()
   }
 })
 </script>
